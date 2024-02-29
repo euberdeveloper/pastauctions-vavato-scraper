@@ -12,6 +12,8 @@ Notes: you will need python and pipenv installed in your system.
 Some adjustemnts:
 - You should change the destination folder `save_path_prefix`
 - You can filter the "categories" of auctions from the variable `allowed_auctions_roots`
+- You can change the request delay in order to not be blocked because of too many requests by changing the variable `request_delay`
+- In case a block happens, the seconds before retrying can be changed in the variable `retry_delay`. At every retry it gets doubled.
 
 ## What does it do
 

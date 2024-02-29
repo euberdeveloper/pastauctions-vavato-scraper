@@ -5,6 +5,7 @@ import json
 import requests
 from enum import Enum
 import math
+import time
 
 # Specify the folder of where the output will be saved
 save_path_prefix = '/home/euberdeveloper/Github/pastauctions/scrapers/pastauctions-vavato-scraper'
@@ -25,6 +26,10 @@ allowed_auctions_roots = [
     'https://vavato.com/en/a/motorcycle',
     'https://vavato.com/en/a/agricultural-and-earthmoving-machiner'
 ]
+# Specify delay in milliseconds for requests in order to not be blocked
+request_delay = 300
+# Specify initial retry delay in milliseconds
+retry_delay = 1000
 
 # Enum with the possible statuses
 class Statuses(Enum):
@@ -40,14 +45,29 @@ def get_status_query_string(statuses):
     return '%2C'.join([str(status) for status in statuses])
 
 # Function to get the HTML from a URL
-def get_html_from_url(url):
+def get_html_from_url(url, max_retries=5):
+    global request_delay
+    global retry_delay
+    time.sleep(request_delay / 1000)
+
     response = requests.get(url)
 
     if response.status_code != 200:
         print(f"Failed to get HTML from {url}")
         return ''
+    
+    text = response.text
+    if 'The request is blocked' in text:
+        print(f"Request was blocked for {url}")
+        if max_retries == 0:
+            raise Exception(f"Max html fetch retries reached for {url}")
+        else:
+            print(f"Retrying in {request_delay}ms")
+            time.sleep(retry_delay / 1000)
+            retry_delay *= 2
+            return get_html_from_url(url, max_retries - 1)
 
-    return response.text
+    return text
 
 # Function to get the string between two strings
 def get_string_between(string, start, end):
